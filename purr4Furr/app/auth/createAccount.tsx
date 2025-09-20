@@ -52,12 +52,6 @@ export default function CreateAccountScreen() {
       >
         <Text style={styles.buttonText}>Sign Up with Google</Text>
       </Pressable>
-
-      <Link href="../auth/login" asChild>
-        <Pressable>
-          <Text style={styles.linkText}>Already have an account? Login</Text>
-        </Pressable>
-      </Link>
     </View>
   );
 }

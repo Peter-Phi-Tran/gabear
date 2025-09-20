@@ -3,14 +3,17 @@ import { View, TextInput, Pressable, StyleSheet, Text, Alert } from 'react-nativ
 import { Link } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
     const [phone, setPhone] = useState('');
     const colorScheme = useColorScheme();
+    const router = useRouter();
 
     const handlePhoneLogin = () => {
         // TODO: Implement phone authentication logic
         Alert.alert('Phone Login', `Logging in with phone: ${phone}`);
+        router.replace('/(tabs)');
     };
 
     const handleGoogleLogin = () => {
@@ -51,12 +54,6 @@ export default function LoginScreen() {
       >
         <Text style={styles.buttonText}>Login with Google</Text>
       </Pressable>
-
-      <Link href="../auth/createAccount" asChild>
-        <Pressable>
-          <Text style={styles.linkText}>Don't have an account? Create an Account</Text>
-        </Pressable>
-      </Link>
     </View>
   );
 }
