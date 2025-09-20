@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { View, TextInput, Pressable, StyleSheet, Text, Alert } from 'react-native';
 import { Link } from 'expo-router';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from 'react-native';
 
 export default function CreateAccountScreen() {
   const [phone, setPhone] = useState('');
+  const colorScheme = useColorScheme();
+
 
   const handlePhoneSignup = () => {
     // TODO: Implement phone sign-up logic
@@ -17,7 +21,7 @@ export default function CreateAccountScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.title}>Purr4Furr</Text>
 
       <Text style={styles.label}>Phone Number</Text>
       <TextInput
@@ -27,13 +31,25 @@ export default function CreateAccountScreen() {
         value={phone}
         onChangeText={setPhone}
       />
-      <Pressable style={styles.button} onPress={handlePhoneSignup}>
+      <Pressable 
+        style={[
+            styles.button,
+            { backgroundColor: Colors[colorScheme ?? 'light'].pastelGreen }
+        ]} 
+        onPress={handlePhoneSignup}
+      >
         <Text style={styles.buttonText}>Sign Up with Phone</Text>
       </Pressable>
 
       <Text style={styles.or}>OR</Text>
 
-      <Pressable style={[styles.button, styles.googleButton]} onPress={handleGoogleSignup}>
+      <Pressable 
+        style={[
+            styles.button,
+            { backgroundColor: Colors[colorScheme ?? 'light'].pastelBlue }
+        ]} 
+        onPress={handlePhoneSignup}
+      >
         <Text style={styles.buttonText}>Sign Up with Google</Text>
       </Pressable>
 
