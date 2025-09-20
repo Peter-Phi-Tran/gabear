@@ -21,16 +21,16 @@ export default function LandingScreen() {
           />
         </View>
         <ThemedText type="title" style={styles.appName}>
-          purr4Furr
+          Purr4Furr
         </ThemedText>
         <ThemedText style={styles.tagline}>
-          Connect with fellow pet lovers
+          Connect with fellow fursonas
         </ThemedText>
       </View>
 
       {/* Button Section */}
       <View style={styles.buttonContainer}>
-        <Link href="/(tabs)" asChild>
+        <Link href="/auth/login" asChild>
           <Pressable
             style={({ pressed }) => [
               styles.button,
@@ -42,13 +42,19 @@ export default function LandingScreen() {
               }
             ]}
           >
-            <ThemedText style={[styles.buttonText, styles.loginButtonText]}>
+            <ThemedText 
+              style={[
+                styles.buttonText, 
+                styles.loginButtonText,
+                { color: Colors[colorScheme ?? 'light'].tint }
+                ]}
+            >
               Login
             </ThemedText>
           </Pressable>
         </Link>
 
-        <Link href="/(tabs)" asChild>
+        <Link href="/auth/createAccount" asChild>
           <Pressable
             style={({ pressed }) => [
               styles.button,
@@ -68,7 +74,7 @@ export default function LandingScreen() {
                 { color: Colors[colorScheme ?? 'light'].tint }
               ]}
             >
-              Create Account
+                Create Account
             </ThemedText>
           </Pressable>
         </Link>
@@ -77,7 +83,7 @@ export default function LandingScreen() {
       {/* Footer */}
       <View style={styles.footer}>
         <ThemedText style={styles.footerText}>
-          Welcome to the community where pets bring people together
+          Welcome to the community where you can find your mate or pack
         </ThemedText>
       </View>
     </ThemedView>
@@ -127,13 +133,16 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   buttonContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     width: '100%',
     gap: 16,
   },
   button: {
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 56,
@@ -145,20 +154,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    backgroundColor: '#fff',
+    marginVertical: 4,
+    width: 220,
   },
   loginButton: {
-    // backgroundColor will be set dynamically based on theme
+    borderColor: '#888'
   },
   createAccountButton: {
     backgroundColor: 'transparent',
-    // borderColor and borderWidth will be set dynamically
+    borderColor: '#888',
+    borderWidth: 2,
   },
   buttonText: {
     fontSize: 18,
     fontWeight: '600',
   },
   loginButtonText: {
-    color: '#fff',
   },
   createAccountButtonText: {
     // color will be set dynamically based on theme
@@ -173,4 +187,5 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     lineHeight: 20,
   },
+
 });
