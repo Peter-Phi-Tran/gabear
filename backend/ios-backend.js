@@ -1,7 +1,7 @@
 // server.js
 const express = require("express");
 const cors = require("cors");
-const supabase = require("./supaBaseClient")
+const supabase = require("../supaBaseClient")
 
 require("dotenv").config();
 
