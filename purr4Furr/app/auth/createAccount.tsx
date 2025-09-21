@@ -35,7 +35,6 @@ export default function CreateAccountScreen() {
         style={styles.input}
         placeholder="Enter your email"
         keyboardType="email-address"
-<<<<<<< HEAD
         value={email}
         onChangeText={setEmail}
       />
@@ -46,11 +45,6 @@ export default function CreateAccountScreen() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-=======
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
->>>>>>> origin/main
       />
       
       <Text style={styles.label}>Password</Text>
