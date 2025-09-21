@@ -79,7 +79,16 @@ export default function HomeScreen() {
 
   const UserCard = ({ user }: { user: any }) => (
     <ThemedView style={styles.card}>
-      <Image source={user.image} style={styles.cardImage} />
+      <View style={styles.imageContainer}>
+        <Image source={user.image} style={styles.cardImage} />
+        {/* Like button overlay on image */}
+        <TouchableOpacity
+          style={[styles.likeButtonOverlay, { backgroundColor: Colors[colorScheme ?? 'light'].pastelGreen }]}
+          onPress={() => console.log('Like', user.name)}
+        >
+          <IconSymbol name="heart.fill" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.cardContent}>
         <ThemedText style={styles.cardName}>
           {user.name}, {user.age}
@@ -87,14 +96,6 @@ export default function HomeScreen() {
         <ThemedText style={styles.cardBio}>
           {user.bio}
         </ThemedText>
-        <View style={styles.cardActions}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: Colors[colorScheme ?? 'light'].pastelGreen }]}
-            onPress={() => console.log('Like', user.name)}
-          >
-            <IconSymbol name="heart.fill" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
       </View>
     </ThemedView>
   );
@@ -125,10 +126,10 @@ export default function HomeScreen() {
           )}
         </ScrollView>
 
-        {/* Floating pass button at bottom right */}
+        {/* Floating pass button at bottom left */}
         {currentUser && (
           <TouchableOpacity
-            style={[styles.passButtonFixed, { backgroundColor: '#ff4458', right: 20, left: undefined }]}
+            style={[styles.passButtonFixed, { backgroundColor: '#ff4458', left: 20, right: undefined }]}
             onPress={() => handlePass(currentUser.id)}
           >
             <ThemedText style={{ color: 'white', fontSize: 28, fontWeight: 'bold' }}>✕</ThemedText>
@@ -149,8 +150,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   header: {
-    paddingVertical: 15,
-    marginTop: 0,         // was 15; set to 0 to avoid double buffer
+    paddingTop: 10,       // Added top padding for better spacing
+    paddingBottom: 15,    // Added bottom padding
+    marginTop: 0,         // Keep at 0 to avoid double buffer
     alignItems: 'flex-start',
     justifyContent: 'flex-end',
   },
@@ -158,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 4,
-    // No extra padding/margin here
+    lineHeight: 34,      // Added line height to prevent text cropping
   },
   card: {
     borderRadius: 16,
@@ -171,42 +173,47 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     backgroundColor: '#fff',
   },
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 300,
+  },
   cardImage: {
     width: '100%',
-    height: 200,
+    height: '100%',
     backgroundColor: '#f0f0f0',
   },
+  likeButtonOverlay: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
   cardContent: {
-    padding: 16,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
   cardName: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 10,
+    color: '#333',
   },
   cardBio: {
     fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 16,
-    opacity: 0.8,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  actionButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    lineHeight: 24,
+    color: '#666',
   },
   endMessage: {
     padding: 32,
@@ -220,7 +227,7 @@ const styles = StyleSheet.create({
   passButtonFixed: {
     position: 'absolute',
     bottom: 30,
-    right: 20,
+    left: 20,            // Changed from right: 20 to left: 20
     width: 60,
     height: 60,
     borderRadius: 30,
