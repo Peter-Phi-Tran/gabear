@@ -4,6 +4,9 @@ import { Link } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
@@ -11,10 +14,40 @@ export default function LoginScreen() {
     const colorScheme = useColorScheme();
     const router = useRouter();
 
-    const handleEmailLogin = () => {
-        // TODO: Implement email authentication logic
-        Alert.alert('Email Login', `Logging in with email: ${email}`);
-        router.replace('/(tabs)');
+    const handleEmailLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Error', 'Please enter both email and password');
+            return;
+        }
+
+        try {
+            console.log('Attempting Supabase login...');
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password,
+            });
+
+            if (error) {
+                console.error('Login error:', error);
+                
+                // Handle specific login errors
+                if (error.message.includes('Invalid login credentials')) {
+                    Alert.alert('Login Failed', 'Invalid email or password. Please check your credentials and try again.');
+                } else if (error.message.includes('Email not confirmed')) {
+                    Alert.alert('Email Not Verified', 'Please check your email and click the verification link before logging in.');
+                } else {
+                    Alert.alert('Login Failed', error.message || 'Unable to log in. Please try again.');
+                }
+            } else {
+                console.log('Login successful:', data);
+                // For existing users logging in, go directly to main app
+                // Profile completion check is only for new signups
+                router.replace('/(tabs)');
+            }
+        } catch (err) {
+            console.error('Unexpected login error:', err);
+            Alert.alert('Connection Error', 'Unable to connect to our servers. Please check your internet connection and try again.');
+        }
     };
 
     const handleGoogleLogin = () => {
@@ -23,8 +56,21 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Purr4Furr</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Back Button */}
+        <Pressable 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <IconSymbol 
+            name="chevron.left" 
+            size={24} 
+            color={Colors[colorScheme ?? 'light'].text || '#000'} 
+          />
+        </Pressable>
+
+        <Text style={styles.title}>Purr4Furr</Text>
 
       <Text style={styles.label}>Email</Text>
       <TextInput
@@ -66,16 +112,28 @@ export default function LoginScreen() {
       >
         <Text style={styles.buttonText}>Login with Google</Text>
       </Pressable>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
     container: {
         flex: 1,
         justifyContent: 'center',
         padding: 24,
-        backgroundColor: '#fff',
+        position: 'relative',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        padding: 8,
+        zIndex: 1,
     },
     title: {
         fontSize: 32,

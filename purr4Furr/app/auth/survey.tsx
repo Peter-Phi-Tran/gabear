@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -84,6 +84,7 @@ export default function SurveyScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
   const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [surveyData, setSurveyData] = useState<SurveyData>({
     firstName: '',
     lastName: '',
@@ -106,6 +107,54 @@ export default function SurveyScreen() {
     relationshipType: '',
     interests: []
   });
+
+  // Load existing profile data if user is updating
+  useEffect(() => {
+    loadExistingProfile();
+  }, []);
+
+  const loadExistingProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        // Pre-populate with existing data
+        setSurveyData({
+          firstName: profile.first_name || '',
+          lastName: profile.last_name || '',
+          pronouns: profile.pronouns || '',
+          age: profile.age?.toString() || '',
+          height: profile.height || '',
+          gender: profile.gender || '',
+          sexuality: profile.sexuality || '',
+          interestedIn: Array.isArray(profile.interested_in) ? profile.interested_in : (profile.interested_in ? [profile.interested_in] : []),
+          ethnicity: profile.ethnicity || '',
+          zodiac: profile.zodiac || '',
+          fursona: profile.fursona || '',
+          work: profile.work || '',
+          jobTitle: profile.job_title || '',
+          school: profile.school || '',
+          education: profile.education || '',
+          religion: profile.religion || '',
+          politics: profile.politics || '',
+          datingIntentions: profile.dating_intentions || '',
+          relationshipType: profile.relationship_type || '',
+          interests: Array.isArray(profile.interests) ? profile.interests : (typeof profile.interests === 'string' ? JSON.parse(profile.interests || '[]') : [])
+        });
+      }
+    } catch (error) {
+      console.log('No existing profile found, starting fresh');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const updateSurveyData = (field: keyof SurveyData, value: any) => {
     setSurveyData(prev => ({ ...prev, [field]: value }));
@@ -569,6 +618,16 @@ export default function SurveyScreen() {
         return false;
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ThemedText style={{ fontSize: 18, marginBottom: 16 }}>Loading your profile...</ThemedText>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors[theme].background }}>

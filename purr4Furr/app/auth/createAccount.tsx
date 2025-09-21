@@ -4,6 +4,8 @@ import { Link, router } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from 'react-native';
 import { supabase } from '@/lib/supabase'; // Back to real Supabase
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // import { mockSupabase } from '@/lib/mock-supabase'; // Mock disabled
 
 export default function CreateAccountScreen() {
@@ -42,8 +44,27 @@ export default function CreateAccountScreen() {
       const { data, error } = await supabase.auth.signUp({ email, password });
       
       if (error) {
-        console.error('Supabase error:', error);
-        Alert.alert('Error', `Signup failed: ${error.message}`);
+        // Handle specific error cases with user-friendly messages
+        if (error.message.includes('User already registered')) {
+          // Don't log this error - it's a normal user flow case
+          Alert.alert(
+            'Account Already Exists', 
+            'An account with this email already exists. Would you like to sign in instead?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Sign In', onPress: () => router.push('/auth/login') }
+            ]
+          );
+        } else if (error.message.includes('Invalid email')) {
+          console.error('Supabase error:', error);
+          Alert.alert('Invalid Email', 'Please enter a valid email address.');
+        } else if (error.message.includes('Password should be at least')) {
+          console.error('Supabase error:', error);
+          Alert.alert('Weak Password', 'Please choose a stronger password.');
+        } else {
+          console.error('Supabase error:', error);
+          Alert.alert('Signup Failed', error.message || 'Unable to create account. Please try again.');
+        }
       } else {
         console.log('Signup successful:', data);
         Alert.alert('Success', 'Account created! Please complete your profile.', [
@@ -52,7 +73,7 @@ export default function CreateAccountScreen() {
       }
     } catch (err) {
       console.error('Unexpected error:', err);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Alert.alert('Connection Error', 'Unable to connect to our servers. Please check your internet connection and try again.');
     }
   };
 
@@ -62,8 +83,21 @@ export default function CreateAccountScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Purr4Furr</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Back Button */}
+        <Pressable 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <IconSymbol 
+            name="chevron.left" 
+            size={24} 
+            color={Colors[colorScheme ?? 'light'].text || '#000'} 
+          />
+        </Pressable>
+
+        <Text style={styles.title}>Purr4Furr</Text>
 
       <Text style={styles.label}>Email</Text>
       <TextInput
@@ -115,16 +149,28 @@ export default function CreateAccountScreen() {
       >
         <Text style={styles.buttonText}>Sign Up with Google</Text>
       </Pressable>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#fff',
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    padding: 8,
+    zIndex: 1,
   },
   title: {
     fontSize: 32,

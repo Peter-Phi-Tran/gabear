@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Button, ScrollView, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, TextInput, Button, ScrollView, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { Link, router } from 'expo-router';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,27 +10,106 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Collapsible } from '@/components/ui/collapsible';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
+  const { signOut, user } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Placeholder data for the user profile
-  const user = {
-    user: 'Peter',
-    profile_photos: require('@/assets/images/FurryPeter.jpg'),
-    profile_info: {
-        
-        gender: 'Gayman',
-        location: 'Arlington, TX',
-        height: '5\'10"',
-        birthday: "9/11/2004",
-        sexual_orientation: "Gay",
-        animal: "cow"
-    },
-    interests: ['Hiking', 'Coding', 'Art','Gooning'],
-    
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        Alert.alert('Error', 'Failed to load profile data');
+      } else {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const formatInterests = (interests: string[] | string | null) => {
+    if (!interests) return [];
+    if (typeof interests === 'string') {
+      try {
+        return JSON.parse(interests);
+      } catch {
+        return interests.split(',').map(i => i.trim());
+      }
+    }
+    return interests;
+  };
+
+  const getDisplayName = () => {
+    return profile?.display_name || profile?.first_name || user?.email?.split('@')[0] || 'User';
+  };
+
+  const getAge = (birthDate: string) => {
+    if (!birthDate) return null;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('Profile: Starting sign out process...');
+              // Let AuthContext handle all navigation logic
+              await signOut();
+              console.log('Profile: Sign out completed');
+            } catch (error) {
+              console.error('Profile: Error during sign out process:', error);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
+        <ThemedView style={[styles.outerContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={Colors[theme].tint} />
+          <ThemedText style={{ marginTop: 16 }}>Loading profile...</ThemedText>
+        </ThemedView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
@@ -48,22 +127,21 @@ export default function ProfileScreen() {
             <View style={styles.profileHeader}>
               <View>
                 <ThemedText type="title" style={styles.profileName}>
-                  {user.user}
+                  {getDisplayName()}
                 </ThemedText>
-                <ThemedText style={styles.profileStatus}>Active</ThemedText>
+                <ThemedText style={styles.profileStatus}>
+                  {profile?.pronouns || 'Active'}
+                </ThemedText>
               </View>
               <Pressable style={styles.editIconContainer}>
                 <IconSymbol name="pencil" size={24} color={Colors[theme].text} />
               </Pressable>
             </View>
             <Image
-              source={user.profile_photos}
+              source={profile?.profile_picture || require('@/assets/images/FurryPeter.jpg')}
               style={styles.profileImage}
               contentFit="cover"
             />
-            <Pressable style={[styles.editButton, { borderColor: Colors[theme].tint }]}>
-              <ThemedText style={[styles.editButtonText, { color: Colors[theme].tint }]}>Edit profile</ThemedText>
-            </Pressable>
           </ThemedView>
 
           {/* Dynamic Information Sections */}
@@ -71,27 +149,27 @@ export default function ProfileScreen() {
             <Collapsible title="My Profile Info">
               <View style={styles.infoRow}>
                 <ThemedText type="defaultSemiBold">Gender:</ThemedText>
-                <ThemedText>{user.profile_info.gender}</ThemedText>
+                <ThemedText>{profile?.gender || 'Not specified'}</ThemedText>
               </View>
               <View style={styles.infoRow}>
-                <ThemedText type="defaultSemiBold">Location:</ThemedText>
-                <ThemedText>{user.profile_info.location}</ThemedText>
+                <ThemedText type="defaultSemiBold">Age:</ThemedText>
+                <ThemedText>{profile?.age ? `${profile.age} years old` : 'Not specified'}</ThemedText>
               </View>
               <View style={styles.infoRow}>
                 <ThemedText type="defaultSemiBold">Height:</ThemedText>
-                <ThemedText>{user.profile_info.height}</ThemedText>
+                <ThemedText>{profile?.height || 'Not specified'}</ThemedText>
               </View>
               <View style={styles.infoRow}>
-                <ThemedText type="defaultSemiBold">Birthdate:</ThemedText>
-                <ThemedText>{user.profile_info.birthday}</ThemedText>
+                <ThemedText type="defaultSemiBold">Ethnicity:</ThemedText>
+                <ThemedText>{profile?.ethnicity || 'Not specified'}</ThemedText>
               </View>
               <View style={styles.infoRow}>
                 <ThemedText type="defaultSemiBold">Sexual Attraction:</ThemedText>
-                <ThemedText>{user.profile_info.sexual_orientation}</ThemedText>
+                <ThemedText>{profile?.sexuality || 'Not specified'}</ThemedText>
               </View>
               <View style={styles.infoRow}>
                 <ThemedText type="defaultSemiBold">Fursona:</ThemedText>
-                <ThemedText>{user.profile_info.animal}</ThemedText>
+                <ThemedText>{profile?.fursona || 'Not specified'}</ThemedText>
               </View>
             </Collapsible>
           </ThemedView>
@@ -99,11 +177,14 @@ export default function ProfileScreen() {
           <ThemedView style={styles.sectionContainer}>
             <Collapsible title="Interests">
               <View style={styles.interestsContainer}>
-                {user.interests.map((interest, index) => (
+                {formatInterests(profile?.interests).map((interest: string, index: number) => (
                   <View key={index} style={[styles.interestTag, { backgroundColor: Colors[theme].tint }]}>
                     <ThemedText style={{ color: Colors[theme].background }}>{interest}</ThemedText>
                   </View>
                 ))}
+                {formatInterests(profile?.interests).length === 0 && (
+                  <ThemedText style={{ opacity: 0.6 }}>No interests specified</ThemedText>
+                )}
               </View>
             </Collapsible>
           </ThemedView>
@@ -112,20 +193,32 @@ export default function ProfileScreen() {
           <ThemedView style={styles.sectionContainer}>
             <Pressable 
               style={[styles.editButton, { borderColor: Colors[theme].tint }]}
-              onPress={() => router.push('/auth/survey' as any)}
+              onPress={() => {
+                Alert.alert(
+                  'Update Profile',
+                  'This will take you to the profile survey to update your information.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Update', onPress: () => router.push('/auth/survey' as any) }
+                  ]
+                );
+              }}
             >
               <ThemedText style={[styles.editButtonText, { color: Colors[theme].tint }]}>Update Profile Info</ThemedText>
             </Pressable>
           </ThemedView>
           
           <ThemedView style={styles.sectionContainer}>
-            <Pressable style={[styles.editButton, { borderColor: Colors[theme].tint }]}>
+            <Pressable 
+              style={[styles.editButton, { borderColor: Colors[theme].tint }]}
+              onPress={() => router.push('/helpSecurity' as any)}
+            >
               <ThemedText style={[styles.editButtonText, { color: Colors[theme].tint }]}>Help and Security</ThemedText>
             </Pressable>
           </ThemedView>
           {/* Log out*/}
           <ThemedView style={styles.sectionContainer}>
-            <Pressable style={styles.logoutButton}>
+            <Pressable style={styles.logoutButton} onPress={handleSignOut}>
               <ThemedText style={styles.logoutButtonText}>Log Out</ThemedText>
             </Pressable>
           </ThemedView>

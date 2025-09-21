@@ -1,13 +1,51 @@
-import React from 'react';
-import { StyleSheet, View, Pressable, Image } from 'react-native';
-import { Link } from 'expo-router';
+import React, { useEffect } from 'react';
+import { StyleSheet, View, Pressable, Image, ActivityIndicator } from 'react-native';
+import { Link, useRouter } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 export default function LandingScreen() {
   const colorScheme = useColorScheme();
+  const { session, loading, isSigningOut } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    console.log('Index useEffect - loading:', loading, 'session:', !!session, 'isSigningOut:', isSigningOut);
+    
+    // Only redirect to tabs if we have a session and we're not in the middle of signing out
+    if (!loading && session && !isSigningOut) {
+      console.log('User has session and not signing out, navigating to tabs');
+      router.replace('/(tabs)');
+    } else if (!loading && !session) {
+      console.log('No session, staying on landing page');
+    }
+  }, [session, loading, isSigningOut, router]);
+
+  // Show loading spinner while checking authentication or signing out
+  if (loading || isSigningOut) {
+    return (
+      <ThemedView style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
+        <ThemedText style={styles.loadingText}>
+          {isSigningOut ? 'Signing out...' : 'Loading...'}
+        </ThemedText>
+      </ThemedView>
+    );
+  }
+
+  // Show loading if we have a session but haven't redirected yet
+  if (session && !isSigningOut) {
+    return (
+      <ThemedView style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={Colors[colorScheme ?? 'light'].tint} />
+        <ThemedText style={styles.loadingText}>Redirecting...</ThemedText>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={styles.container}>
@@ -97,6 +135,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 32,
     paddingVertical: 60,
+  },
+  centered: {
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    opacity: 0.7,
   },
   logoContainer: {
     flex: 1,
