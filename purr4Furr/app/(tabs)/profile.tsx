@@ -110,6 +110,15 @@ export default function ProfileScreen() {
 
           {/* General App Info Sections */}
           <ThemedView style={styles.sectionContainer}>
+            <Pressable 
+              style={[styles.editButton, { borderColor: Colors[theme].tint }]}
+              onPress={() => router.push('/auth/survey' as any)}
+            >
+              <ThemedText style={[styles.editButtonText, { color: Colors[theme].tint }]}>Update Profile Info</ThemedText>
+            </Pressable>
+          </ThemedView>
+          
+          <ThemedView style={styles.sectionContainer}>
             <Pressable style={[styles.editButton, { borderColor: Colors[theme].tint }]}>
               <ThemedText style={[styles.editButtonText, { color: Colors[theme].tint }]}>Help and Security</ThemedText>
             </Pressable>

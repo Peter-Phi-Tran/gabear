@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, TextInput, Pressable, StyleSheet, Text, Alert } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from 'react-native';
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'; // Back to real Supabase
+// import { mockSupabase } from '@/lib/mock-supabase'; // Mock disabled
 
 export default function CreateAccountScreen() {
   const [email, setEmail] = useState('');
@@ -31,16 +32,27 @@ export default function CreateAccountScreen() {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+    if (password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters');
       return;
     }
     
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
-      Alert.alert('Success', 'Account created! Please check your email for verification.');
+    try {
+      console.log('Attempting Supabase signup...');
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        Alert.alert('Error', `Signup failed: ${error.message}`);
+      } else {
+        console.log('Signup successful:', data);
+        Alert.alert('Success', 'Account created! Please complete your profile.', [
+          { text: 'OK', onPress: () => router.push('/auth/survey' as any) }
+        ]);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
   };
 
@@ -64,11 +76,14 @@ export default function CreateAccountScreen() {
       <Text style={styles.label}>Password</Text>
         <TextInput
         style={styles.input}
-        placeholder="Enter your password"
+        placeholder="Enter your password (min 8 characters)"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
+      {password.length > 0 && password.length < 8 && (
+        <Text style={styles.errorText}>Password must be at least 8 characters</Text>
+      )}
       
       <Text style={styles.label}>Confirm Password</Text>
       <TextInput
@@ -157,5 +172,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
     fontSize: 16,
     textDecorationLine: 'underline',
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    marginTop: -12,
+    marginBottom: 8,
   },
 });
