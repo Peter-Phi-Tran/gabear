@@ -47,15 +47,6 @@ export default function CreateAccountScreen() {
         onChangeText={setPassword}
       />
       
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      
       <Text style={styles.label}>Confirm Password</Text>
       <TextInput
         style={styles.input}
