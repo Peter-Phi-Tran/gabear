@@ -6,13 +6,14 @@ import { useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
-    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const colorScheme = useColorScheme();
     const router = useRouter();
 
-    const handlePhoneLogin = () => {
-        // TODO: Implement phone authentication logic
-        Alert.alert('Phone Login', `Logging in with phone: ${phone}`);
+    const handleEmailLogin = () => {
+        // TODO: Implement email authentication logic
+        Alert.alert('Email Login', `Logging in with email: ${email}`);
         router.replace('/(tabs)');
     };
 
@@ -25,22 +26,33 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Purr4Furr</Text>
 
-      <Text style={styles.label}>Phone Number</Text>
+      <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter your phone number"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
+        placeholder="Enter your email"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
       />
+      
+      <Text style={styles.label}>Password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+      
       <Pressable 
         style={[
           styles.button, 
           { backgroundColor: Colors[colorScheme ?? 'light'].pastelGreen }
         ]} 
-        onPress={handlePhoneLogin}
+        onPress={handleEmailLogin}
       >
-        <Text style={styles.buttonText}>Login with Phone</Text>
+        <Text style={styles.buttonText}>Login with Email</Text>
       </Pressable>
 
       <Text style={styles.or}>OR</Text>
