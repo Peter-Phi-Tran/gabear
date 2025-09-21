@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase'
 
 export default function CreateAccountScreen() {
   const [email, setEmail] = useState('');
-<<<<<<< HEAD
   const [ password, setPassword ] = useState('');
   const colorScheme = useColorScheme();
 
@@ -20,20 +19,6 @@ export default function CreateAccountScreen() {
     } else {
       Alert.alert('Account made!');
     }
-=======
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const colorScheme = useColorScheme();
-
-
-  const handleEmailSignup = () => {
-    // TODO: Implement email sign-up logic
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-    Alert.alert('Sign Up', `Creating account with email: ${email}`);
->>>>>>> origin/main
   };
 
   const handleGoogleSignup = () => {
