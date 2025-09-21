@@ -5,13 +5,19 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from 'react-native';
 
 export default function CreateAccountScreen() {
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const colorScheme = useColorScheme();
 
 
-  const handlePhoneSignup = () => {
-    // TODO: Implement phone sign-up logic
-    Alert.alert('Sign Up', `Creating account with phone: ${phone}`);
+  const handleEmailSignup = () => {
+    // TODO: Implement email sign-up logic
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+    Alert.alert('Sign Up', `Creating account with email: ${email}`);
   };
 
   const handleGoogleSignup = () => {
@@ -23,22 +29,42 @@ export default function CreateAccountScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Purr4Furr</Text>
 
-      <Text style={styles.label}>Phone Number</Text>
+      <Text style={styles.label}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter your phone number"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
+        placeholder="Enter your email"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        value={email}
+        onChangeText={setEmail}
       />
+      
+      <Text style={styles.label}>Password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+      
+      <Text style={styles.label}>Confirm Password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm your password"
+        secureTextEntry
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+      />
+      
       <Pressable 
         style={[
             styles.button,
             { backgroundColor: Colors[colorScheme ?? 'light'].pastelGreen }
         ]} 
-        onPress={handlePhoneSignup}
+        onPress={handleEmailSignup}
       >
-        <Text style={styles.buttonText}>Sign Up with Phone</Text>
+        <Text style={styles.buttonText}>Sign Up with Email</Text>
       </Pressable>
 
       <Text style={styles.or}>OR</Text>
@@ -48,7 +74,7 @@ export default function CreateAccountScreen() {
             styles.button,
             { backgroundColor: Colors[colorScheme ?? 'light'].pastelBlue }
         ]} 
-        onPress={handlePhoneSignup}
+        onPress={handleGoogleSignup}
       >
         <Text style={styles.buttonText}>Sign Up with Google</Text>
       </Pressable>
