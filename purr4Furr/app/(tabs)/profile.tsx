@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View, TextInput, Button, ScrollView, Pressable } from 'react-native';
 import { Link, router } from 'expo-router';
 import { Image } from 'expo-image';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -32,106 +33,124 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ThemedView style={styles.outerContainer}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Profile Card Section */}
-        <ThemedView style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <View>
-              <ThemedText type="title" style={styles.profileName}>
-                {user.name}
-              </ThemedText>
-              <ThemedText style={styles.profileStatus}>{user.profileStatus}</ThemedText>
-            </View>
-            <Pressable style={styles.editIconContainer}>
-              <IconSymbol name="pencil" size={24} color={Colors[theme].text} />
-            </Pressable>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
+      <ThemedView style={styles.outerContainer}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {/* Header Section to match index spacing */}
+          <View style={styles.header}>
+            <ThemedText style={styles.headerTitle}>
+              Profile
+            </ThemedText>
           </View>
-          <Image
-            source={user.profile_photos}
-            style={styles.profileImage}
-            contentFit="cover"
-          />
-          <Link href="/edit-profile" asChild>
-            <Pressable style={styles.editButton}>
-              <ThemedText style={styles.editButtonText}>Edit profile</ThemedText>
+          
+          {/* Profile Card Section */}
+          <ThemedView style={styles.profileCard}>
+            <View style={styles.profileHeader}>
+              <View>
+                <ThemedText type="title" style={styles.profileName}>
+                  {user.user}
+                </ThemedText>
+                <ThemedText style={styles.profileStatus}>Active</ThemedText>
+              </View>
+              <Pressable style={styles.editIconContainer}>
+                <IconSymbol name="pencil" size={24} color={Colors[theme].text} />
+              </Pressable>
+            </View>
+            <Image
+              source={user.profile_photos}
+              style={styles.profileImage}
+              contentFit="cover"
+            />
+            <Pressable style={[styles.editButton, { borderColor: Colors[theme].tint }]}>
+              <ThemedText style={[styles.editButtonText, { color: Colors[theme].tint }]}>Edit profile</ThemedText>
             </Pressable>
-          </Link>
-        </ThemedView>
+          </ThemedView>
 
-        {/* Dynamic Information Sections */}
-        <ThemedView style={styles.sectionContainer}>
-          <Collapsible title="My Profile Info">
-            <View style={styles.infoRow}>
-              <ThemedText type="defaultSemiBold">Gender:</ThemedText>
-              <ThemedText>{user.profile_info.gender}</ThemedText>
-            </View>
-            <View style={styles.infoRow}>
-              <ThemedText type="defaultSemiBold">Location:</ThemedText>
-              <ThemedText>{user.profile_info.location}</ThemedText>
-            </View>
-            <View style={styles.infoRow}>
-              <ThemedText type="defaultSemiBold">Height:</ThemedText>
-              <ThemedText>{user.profile_info.height}</ThemedText>
-            </View>
-                        <View style={styles.infoRow}>
-              <ThemedText type="defaultSemiBold">Birthdate:</ThemedText>
-              <ThemedText>{user.profile_info.birthday}</ThemedText>
-            </View>
-            <View style={styles.infoRow}>
-              <ThemedText type="defaultSemiBold">Sexual Attraction:</ThemedText>
-              <ThemedText>{user.profile_info.sexual_orientation}</ThemedText>
-            </View>
-            <View style={styles.infoRow}>
-              <ThemedText type="defaultSemiBold">Fursona:</ThemedText>
-              <ThemedText>{user.profile_info.animal}</ThemedText>
-            </View>
-          </Collapsible>
-        </ThemedView>
+          {/* Dynamic Information Sections */}
+          <ThemedView style={styles.sectionContainer}>
+            <Collapsible title="My Profile Info">
+              <View style={styles.infoRow}>
+                <ThemedText type="defaultSemiBold">Gender:</ThemedText>
+                <ThemedText>{user.profile_info.gender}</ThemedText>
+              </View>
+              <View style={styles.infoRow}>
+                <ThemedText type="defaultSemiBold">Location:</ThemedText>
+                <ThemedText>{user.profile_info.location}</ThemedText>
+              </View>
+              <View style={styles.infoRow}>
+                <ThemedText type="defaultSemiBold">Height:</ThemedText>
+                <ThemedText>{user.profile_info.height}</ThemedText>
+              </View>
+              <View style={styles.infoRow}>
+                <ThemedText type="defaultSemiBold">Birthdate:</ThemedText>
+                <ThemedText>{user.profile_info.birthday}</ThemedText>
+              </View>
+              <View style={styles.infoRow}>
+                <ThemedText type="defaultSemiBold">Sexual Attraction:</ThemedText>
+                <ThemedText>{user.profile_info.sexual_orientation}</ThemedText>
+              </View>
+              <View style={styles.infoRow}>
+                <ThemedText type="defaultSemiBold">Fursona:</ThemedText>
+                <ThemedText>{user.profile_info.animal}</ThemedText>
+              </View>
+            </Collapsible>
+          </ThemedView>
 
-        <ThemedView style={styles.sectionContainer}>
-          <Collapsible title="Interests">
-            <View style={styles.interestsContainer}>
-              {user.interests.map((interest, index) => (
-                <View key={index} style={styles.interestTag}>
-                  <ThemedText style={{ color: Colors[theme].background }}>{interest}</ThemedText>
-                </View>
-              ))}
-            </View>
-          </Collapsible>
-        </ThemedView>
+          <ThemedView style={styles.sectionContainer}>
+            <Collapsible title="Interests">
+              <View style={styles.interestsContainer}>
+                {user.interests.map((interest, index) => (
+                  <View key={index} style={[styles.interestTag, { backgroundColor: Colors[theme].tint }]}>
+                    <ThemedText style={{ color: Colors[theme].background }}>{interest}</ThemedText>
+                  </View>
+                ))}
+              </View>
+            </Collapsible>
+          </ThemedView>
 
-        {/* General App Info Sections */}
-        <ThemedView style={styles.sectionContainer}>
-          <Link href="/Help" asChild>
-            <Pressable style={styles.editButton}>
-              <ThemedText style={styles.editButtonText}>Help and Security</ThemedText>
+          {/* General App Info Sections */}
+          <ThemedView style={styles.sectionContainer}>
+            <Pressable style={[styles.editButton, { borderColor: Colors[theme].tint }]}>
+              <ThemedText style={[styles.editButtonText, { color: Colors[theme].tint }]}>Help and Security</ThemedText>
             </Pressable>
-          </Link>
-        </ThemedView>
-        {/* Log out*/}
-        <ThemedView style={styles.sectionContainer}>
-          <Link href="/Log Out" asChild>
+          </ThemedView>
+          {/* Log out*/}
+          <ThemedView style={styles.sectionContainer}>
             <Pressable style={styles.logoutButton}>
               <ThemedText style={styles.logoutButtonText}>Log Out</ThemedText>
             </Pressable>
-          </Link>
-        </ThemedView>
-      </ScrollView>
-    </ThemedView>
+          </ThemedView>
+        </ScrollView>
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   scrollContainer: {
-    padding: 20,
+    paddingHorizontal: 16,
     gap: 16,
+  },
+  header: {
+    paddingTop: 10,       // Added top padding for better spacing
+    paddingBottom: 15,    // Added bottom padding
+    marginTop: 0,         // Keep at 0 to avoid double buffer
+    alignItems: 'flex-start',
+    justifyContent: 'flex-end',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    lineHeight: 34,      // Added line height to prevent text cropping
   },
   profileCard: {
     padding: 24,
+    marginHorizontal: 4,
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -187,7 +206,6 @@ const styles = StyleSheet.create({
   editButtonText: {
     textAlign: 'center',
     fontWeight: 'bold',
-    color: 'white',
   },
   sectionContainer: {
     borderRadius: 12,
@@ -209,7 +227,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#0a7ea4',
   },
   logoutButton:{
     width: '100%',

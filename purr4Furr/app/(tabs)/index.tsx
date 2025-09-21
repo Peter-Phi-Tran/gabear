@@ -7,10 +7,14 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLikes, User } from '@/contexts/LikesContext';
+import { LikePopup } from '@/components/LikePopup';
+import { MatchPopup } from '@/components/MatchPopup';
+import { router } from 'expo-router';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const generateMockUsers = () => [
+const generateMockUsers = (): User[] => [
   { id: 1, name: 'Alex', age: 25, bio: 'Love hiking and coffee dates', image: require('@/assets/images/react-logo.png') },
   { id: 2, name: 'Sam', age: 28, bio: 'Photographer and dog lover', image: require('@/assets/images/react-logo.png') },
   { id: 3, name: 'Jordan', age: 24, bio: 'Yoga instructor and foodie', image: require('@/assets/images/react-logo.png') },
@@ -26,9 +30,14 @@ const generateMockUsers = () => [
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const navigation = useNavigation();
+  const { addLikedProfile, checkForMatch } = useLikes();
   const [users, setUsers] = useState(generateMockUsers());
   const [passedUsers, setPassedUsers] = useState<Set<number>>(new Set());
   const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showMatchPopup, setShowMatchPopup] = useState(false);
+  const [likedUserName, setLikedUserName] = useState('');
+  const [matchedUser, setMatchedUser] = useState<User | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const lastScrollY = useRef(0);
   const scrollDirection = useRef<'up' | 'down'>('up');
@@ -74,17 +83,38 @@ export default function HomeScreen() {
     lastScrollY.current = currentScrollY;
   }, [navigation]);
 
+  const handleLike = (user: User) => {
+    addLikedProfile(user);
+    
+    // Check if this creates a match
+    if (checkForMatch(user)) {
+      setMatchedUser(user);
+      setShowMatchPopup(true);
+    } else {
+      setLikedUserName(user.name);
+      setShowPopup(true);
+    }
+    
+    handlePass(user.id); // Also move to next profile
+  };
+
+  const handleSendMessage = () => {
+    setShowMatchPopup(false);
+    // Switch to matches tab
+    router.push('/(tabs)/matches');
+  };
+
   const filteredUsers = users.filter(user => !passedUsers.has(user.id));
   const currentUser = filteredUsers[currentProfileIndex];
 
-  const UserCard = ({ user }: { user: any }) => (
+  const UserCard = ({ user }: { user: User }) => (
     <ThemedView style={styles.card}>
       <View style={styles.imageContainer}>
         <Image source={user.image} style={styles.cardImage} />
         {/* Like button overlay on image */}
         <TouchableOpacity
           style={[styles.likeButtonOverlay, { backgroundColor: Colors[colorScheme ?? 'light'].pastelGreen }]}
-          onPress={() => console.log('Like', user.name)}
+          onPress={() => handleLike(user)}
         >
           <IconSymbol name="heart.fill" size={28} color="#fff" />
         </TouchableOpacity>
@@ -135,6 +165,21 @@ export default function HomeScreen() {
             <ThemedText style={{ color: 'white', fontSize: 28, fontWeight: 'bold' }}>✕</ThemedText>
           </TouchableOpacity>
         )}
+        
+        {/* Like popup notification */}
+        <LikePopup 
+          userName={likedUserName}
+          visible={showPopup}
+          onHide={() => setShowPopup(false)}
+        />
+        
+        {/* Match popup notification */}
+        <MatchPopup
+          userName={matchedUser?.name || ''}
+          visible={showMatchPopup}
+          onHide={() => setShowMatchPopup(false)}
+          onSendMessage={handleSendMessage}
+        />
       </ThemedView>
     </SafeAreaView>
   );
