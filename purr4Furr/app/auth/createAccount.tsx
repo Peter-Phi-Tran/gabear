@@ -27,12 +27,20 @@ export default function CreateAccountScreen() {
 
 
   const handleEmailSignup = async () => {
-    // TODO: Implement email sign-up logic
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+    
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       Alert.alert('Error', error.message);
     } else {
-      Alert.alert('Account made!');
+      Alert.alert('Success', 'Account created! Please check your email for verification.');
     }
   };
 
