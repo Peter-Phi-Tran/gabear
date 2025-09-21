@@ -15,7 +15,7 @@ export default function LandingScreen() {
       <View style={styles.logoContainer}>
         <View style={styles.logoWrapper}>
           <Image
-            source={require('@/assets/images/icon.png')}
+            source={require('@/assets/images/purr4furr-high-resolution-logo.png')}
             style={styles.logo}
             resizeMode="contain"
           />
