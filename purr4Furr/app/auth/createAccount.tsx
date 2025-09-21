@@ -8,7 +8,22 @@ import { supabase } from '@/lib/supabase'
 export default function CreateAccountScreen() {
   const [email, setEmail] = useState('');
   const [ password, setPassword ] = useState('');
+  const [confirmPassword, setConfirmPassword ] = useState('');
+  const [ error, setError] = useState('');
   const colorScheme = useColorScheme();
+
+  const onSignUpPress = () => {
+    setError('');
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return;
+    }
+  }
 
 
   const handleEmailSignup = async () => {
