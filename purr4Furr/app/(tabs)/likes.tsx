@@ -1,36 +1,63 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, ScrollView, View, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useLikes } from '@/contexts/LikesContext';
+import { useDating } from '@/contexts/DatingContext';
+import { DatingProfile } from '@/lib/datingService';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function LikesScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
-  const { likedProfiles, removeLikedProfile } = useLikes();
+  const { likedProfiles, unlikeUser } = useDating();
 
-  const LikedProfileCard = ({ user }: { user: any }) => (
+  const LikedProfileCard = ({ user }: { user: DatingProfile }) => (
     <ThemedView style={styles.card}>
       <View style={styles.imageContainer}>
-        <Image source={user.image} style={styles.cardImage} />
+        <Image 
+          source={
+            user.profile_picture 
+              ? { uri: user.profile_picture }
+              : require('@/assets/images/furry1.jpg')
+          } 
+          style={styles.cardImage} 
+        />
         <TouchableOpacity
           style={[styles.removeButton, { backgroundColor: '#ff4458' }]}
-          onPress={() => removeLikedProfile(user.id)}
+          onPress={() => unlikeUser(user.id)}
         >
           <IconSymbol name="xmark" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
       <View style={styles.cardContent}>
         <ThemedText style={styles.cardName}>
-          {user.name}, {user.age}
+          {user.display_name || user.first_name}, {user.age}
         </ThemedText>
         <ThemedText style={styles.cardBio}>
-          {user.bio}
+          {user.bio || 'No bio provided'}
         </ThemedText>
+        
+        {/* Additional profile info */}
+        <View style={styles.profileDetails}>
+          {user.gender && (
+            <View style={styles.detailTag}>
+              <ThemedText style={styles.detailText}>{user.gender}</ThemedText>
+            </View>
+          )}
+          {user.fursona && (
+            <View style={styles.detailTag}>
+              <ThemedText style={styles.detailText}>{user.fursona}</ThemedText>
+            </View>
+          )}
+          {user.location_city && (
+            <View style={styles.detailTag}>
+              <ThemedText style={styles.detailText}>{user.location_city}</ThemedText>
+            </View>
+          )}
+        </View>
       </View>
     </ThemedView>
   );
@@ -64,7 +91,7 @@ export default function LikesScreen() {
             </ThemedView>
           ) : (
             <View style={styles.profilesContainer}>
-              {likedProfiles.map((user) => (
+              {likedProfiles.map((user: DatingProfile) => (
                 <LikedProfileCard key={user.id} user={user} />
               ))}
             </View>
@@ -174,6 +201,23 @@ const styles = StyleSheet.create({
   cardBio: {
     fontSize: 14,
     lineHeight: 20,
+    color: '#666',
+    marginBottom: 16,
+  },
+  profileDetails: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  detailTag: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  detailText: {
+    fontSize: 12,
+    fontWeight: '500',
     color: '#666',
   },
 });

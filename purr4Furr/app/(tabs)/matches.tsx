@@ -1,30 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, ScrollView, View, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useLikes, Match } from '@/contexts/LikesContext';
+import { useDating } from '@/contexts/DatingContext';
+import { DatingMatch } from '@/lib/datingService';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { ChatModal } from '@/components/ChatModal';
 
 export default function MatchesScreen() {
   const colorScheme = useColorScheme();
   const theme = colorScheme ?? 'light';
-  const { matches } = useLikes();
+  const { matches, refreshMatches } = useDating();
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
   const [showChatModal, setShowChatModal] = useState(false);
 
-  // Get fresh match data from context based on selected ID
-  const selectedMatch = selectedMatchId ? matches.find(m => m.id === selectedMatchId) || null : null;
+  useEffect(() => {
+    refreshMatches();
+  }, []);
 
-  const openChat = (match: Match) => {
-    setSelectedMatchId(match.id);
+  // Get fresh match data from context based on selected ID
+  const selectedMatch = selectedMatchId ? matches.find((m: DatingMatch) => m.match_id === selectedMatchId) || null : null;
+
+  const openChat = (match: DatingMatch) => {
+    setSelectedMatchId(match.match_id);
     setShowChatModal(true);
   };
 
-  const formatLastMessageTime = (date: Date) => {
+  const formatLastMessageTime = (dateString: string) => {
+    const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -37,61 +42,70 @@ export default function MatchesScreen() {
     return `${days}d ago`;
   };
 
-  const MatchCard = ({ match }: { match: Match }) => {
-    const hasUnreadMessages = match.messages.some(msg => !msg.read && msg.senderId !== 0);
-    
-    return (
-      <TouchableOpacity
-        style={styles.matchCard}
-        onPress={() => openChat(match)}
-      >
-        <View style={styles.matchImageContainer}>
-          <Image source={match.user.image} style={styles.matchImage} />
-          {hasUnreadMessages && <View style={styles.unreadIndicator} />}
-        </View>
-        
-        <View style={styles.matchInfo}>
-          <View style={styles.matchHeader}>
-            <ThemedText style={styles.matchName}>{match.user.name}</ThemedText>
-            {match.lastMessage && (
-              <ThemedText style={styles.matchTime}>
-                {formatLastMessageTime(match.lastMessage.timestamp)}
-              </ThemedText>
-            )}
-          </View>
-          
-          <ThemedText style={styles.matchLastMessage} numberOfLines={1}>
-            {match.lastMessage 
-              ? match.lastMessage.text 
-              : `You matched with ${match.user.name}! Say hello 👋`
-            }
+  const MatchCard = ({ match }: { match: DatingMatch }) => (
+    <TouchableOpacity
+      style={styles.matchCard}
+      onPress={() => openChat(match)}
+    >
+      <View style={styles.matchImageContainer}>
+        <Image 
+          source={
+            match.profile_picture 
+              ? { uri: match.profile_picture }
+              : require('@/assets/images/furry2.jpg')
+          } 
+          style={styles.matchImage} 
+        />
+        {match.unread_count > 0 && <View style={styles.unreadIndicator} />}
+      </View>
+      
+      <View style={styles.matchInfo}>
+        <View style={styles.matchHeader}>
+          <ThemedText style={styles.matchName}>
+            {match.display_name || match.first_name}
           </ThemedText>
+          {match.last_message_time && (
+            <ThemedText style={styles.matchTime}>
+              {formatLastMessageTime(match.last_message_time)}
+            </ThemedText>
+          )}
         </View>
         
-        <IconSymbol name="chevron.right" size={16} color={Colors[theme].icon} />
-      </TouchableOpacity>
-    );
-  };
+        <ThemedText style={styles.matchLastMessage} numberOfLines={1}>
+          {match.last_message_content || 'You matched! Say hello 👋'}
+        </ThemedText>
+      </View>
+      
+      <IconSymbol name="chevron.right" size={16} color={Colors[theme].icon} />
+    </TouchableOpacity>
+  );
 
-  const NewMatchCard = ({ match }: { match: Match }) => (
+  const NewMatchCard = ({ match }: { match: DatingMatch }) => (
     <TouchableOpacity
       style={styles.newMatchCard}
       onPress={() => openChat(match)}
     >
       <View style={styles.newMatchImageContainer}>
-        <Image source={match.user.image} style={styles.newMatchImage} />
+        <Image 
+          source={
+            match.profile_picture 
+              ? { uri: match.profile_picture }
+              : require('@/assets/images/furry1.jpg')
+          } 
+          style={styles.newMatchImage} 
+        />
         <View style={styles.newMatchBadge}>
           <IconSymbol name="heart.fill" size={12} color="#fff" />
         </View>
       </View>
       <ThemedText style={styles.newMatchName} numberOfLines={1}>
-        {match.user.name}
+        {match.display_name || match.first_name}
       </ThemedText>
     </TouchableOpacity>
   );
 
-  const newMatches = matches.filter(match => match.messages.length === 0);
-  const activeMatches = matches.filter(match => match.messages.length > 0);
+  const newMatches = matches.filter((match: DatingMatch) => !match.last_message_content);
+  const activeMatches = matches.filter((match: DatingMatch) => match.last_message_content);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors[theme].background }}>
@@ -131,8 +145,8 @@ export default function MatchesScreen() {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.newMatchesContainer}
                   >
-                    {newMatches.map((match) => (
-                      <NewMatchCard key={match.id} match={match} />
+                    {newMatches.slice(0, 5).map((match: DatingMatch) => (
+                      <NewMatchCard key={match.match_id} match={match} />
                     ))}
                   </ScrollView>
                 </View>
@@ -144,13 +158,31 @@ export default function MatchesScreen() {
                   <ThemedText style={styles.sectionTitle}>Messages</ThemedText>
                   <View style={styles.messagesContainer}>
                     {activeMatches
-                      .sort((a, b) => {
-                        const aTime = a.lastMessage?.timestamp.getTime() || a.matchedAt.getTime();
-                        const bTime = b.lastMessage?.timestamp.getTime() || b.matchedAt.getTime();
+                      .sort((a: DatingMatch, b: DatingMatch) => {
+                        const aTime = new Date(a.last_message_time || a.matched_at).getTime();
+                        const bTime = new Date(b.last_message_time || b.matched_at).getTime();
                         return bTime - aTime;
                       })
-                      .map((match) => (
-                        <MatchCard key={match.id} match={match} />
+                      .map((match: DatingMatch) => (
+                        <MatchCard key={match.match_id} match={match} />
+                      ))}
+                  </View>
+                </View>
+              )}
+
+              {/* All Matches if no separation needed */}
+              {newMatches.length === 0 && activeMatches.length === 0 && (
+                <View style={styles.section}>
+                  <ThemedText style={styles.sectionTitle}>All Matches</ThemedText>
+                  <View style={styles.messagesContainer}>
+                    {matches
+                      .sort((a: DatingMatch, b: DatingMatch) => {
+                        const aTime = new Date(a.matched_at).getTime();
+                        const bTime = new Date(b.matched_at).getTime();
+                        return bTime - aTime;
+                      })
+                      .map((match: DatingMatch) => (
+                        <MatchCard key={match.match_id} match={match} />
                       ))}
                   </View>
                 </View>
@@ -159,15 +191,26 @@ export default function MatchesScreen() {
           )}
         </ScrollView>
         
-        {/* Chat Modal */}
-        <ChatModal
-          visible={showChatModal}
-          match={selectedMatch}
-          onClose={() => {
-            setShowChatModal(false);
-            setSelectedMatchId(null);
-          }}
-        />
+        {/* Chat Modal - Need to create a simpler version */}
+        {showChatModal && selectedMatch && (
+          <ThemedView style={styles.chatPlaceholder}>
+            <ThemedText style={styles.chatPlaceholderText}>
+              Chat with {selectedMatch.display_name || selectedMatch.first_name}
+            </ThemedText>
+            <ThemedText style={styles.chatPlaceholderSubtext}>
+              Chat functionality coming soon!
+            </ThemedText>
+            <TouchableOpacity
+              style={styles.chatCloseButton}
+              onPress={() => {
+                setShowChatModal(false);
+                setSelectedMatchId(null);
+              }}
+            >
+              <ThemedText style={styles.chatCloseText}>Close</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        )}
       </ThemedView>
     </SafeAreaView>
   );
@@ -320,5 +363,39 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     paddingHorizontal: 32,
     lineHeight: 22,
+  },
+  chatPlaceholder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  chatPlaceholderText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  chatPlaceholderSubtext: {
+    fontSize: 16,
+    textAlign: 'center',
+    opacity: 0.7,
+    marginBottom: 24,
+  },
+  chatCloseButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  chatCloseText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

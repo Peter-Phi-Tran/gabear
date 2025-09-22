@@ -56,13 +56,10 @@ export default function CreateAccountScreen() {
             ]
           );
         } else if (error.message.includes('Invalid email')) {
-          console.error('Supabase error:', error);
           Alert.alert('Invalid Email', 'Please enter a valid email address.');
         } else if (error.message.includes('Password should be at least')) {
-          console.error('Supabase error:', error);
           Alert.alert('Weak Password', 'Please choose a stronger password.');
         } else {
-          console.error('Supabase error:', error);
           Alert.alert('Signup Failed', error.message || 'Unable to create account. Please try again.');
         }
       } else {
@@ -72,14 +69,8 @@ export default function CreateAccountScreen() {
         ]);
       }
     } catch (err) {
-      console.error('Unexpected error:', err);
       Alert.alert('Connection Error', 'Unable to connect to our servers. Please check your internet connection and try again.');
     }
-  };
-
-  const handleGoogleSignup = () => {
-    // TODO: Implement Google sign-up logic
-    Alert.alert('Google Sign Up', 'Signing up with Google');
   };
 
   return (
@@ -137,18 +128,6 @@ export default function CreateAccountScreen() {
       >
         <Text style={styles.buttonText}>Sign Up with Email</Text>
       </Pressable>
-
-      <Text style={styles.or}>OR</Text>
-
-      <Pressable 
-        style={[
-            styles.button,
-            { backgroundColor: Colors[colorScheme ?? 'light'].pastelBlue }
-        ]} 
-        onPress={handleGoogleSignup}
-      >
-        <Text style={styles.buttonText}>Sign Up with Google</Text>
-      </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -197,9 +176,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 12,
-  },
-  googleButton: {
-    backgroundColor: '#DB4437',
   },
   buttonText: {
     color: '#fff',

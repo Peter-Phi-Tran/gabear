@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { logger } from '@/lib/logger';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
@@ -28,16 +29,23 @@ export default function LoginScreen() {
             });
 
             if (error) {
-                console.error('Login error:', error);
+                logger.error('Login error', error);
                 
-                // Handle specific login errors
+                // User-friendly error messages without exposing technical details
+                let userMessage = 'Login failed. Please try again.';
+                
                 if (error.message.includes('Invalid login credentials')) {
-                    Alert.alert('Login Failed', 'Invalid email or password. Please check your credentials and try again.');
+                    userMessage = 'Invalid email or password. Please check your credentials and try again.';
                 } else if (error.message.includes('Email not confirmed')) {
-                    Alert.alert('Email Not Verified', 'Please check your email and click the verification link before logging in.');
-                } else {
-                    Alert.alert('Login Failed', error.message || 'Unable to log in. Please try again.');
+                    userMessage = 'Please check your email and click the verification link before logging in.';
+                } else if (error.message.includes('User not found')) {
+                    userMessage = 'Account not found. Would you like to create an account instead?';
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                    userMessage = 'Connection problem. Please check your internet and try again.';
                 }
+                
+                Alert.alert('Login Failed', userMessage);
+                return;
             } else {
                 console.log('Login successful:', data);
                 // For existing users logging in, go directly to main app
@@ -45,15 +53,17 @@ export default function LoginScreen() {
                 router.replace('/(tabs)');
             }
         } catch (err) {
-            console.error('Unexpected login error:', err);
-            Alert.alert('Connection Error', 'Unable to connect to our servers. Please check your internet connection and try again.');
+            logger.error('Unexpected login error', err);
+            
+            // Show user-friendly message without exposing technical details
+            Alert.alert(
+                'Connection Error', 
+                'Unable to connect. Please check your internet connection and try again.'
+            );
         }
     };
 
-    const handleGoogleLogin = () => {
-    // TODO: Implement Google authentication logic
-    Alert.alert('Google Login', 'Logging in with Google');
-  };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -101,17 +111,7 @@ export default function LoginScreen() {
         <Text style={styles.buttonText}>Login with Email</Text>
       </Pressable>
 
-      <Text style={styles.or}>OR</Text>
 
-      <Pressable 
-        style={[
-          styles.button, 
-          { backgroundColor: Colors[colorScheme ?? 'light'].pastelBlue }
-        ]} 
-        onPress={handleGoogleLogin}
-      >
-        <Text style={styles.buttonText}>Login with Google</Text>
-      </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -165,12 +165,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
-    or: {
-        textAlign: 'center',
-        marginVertical: 12,
-        fontSize: 16,
-        color: '#888',
-    },
+
     linkText: {
         color: '#4F46E5',
         textAlign: 'center',

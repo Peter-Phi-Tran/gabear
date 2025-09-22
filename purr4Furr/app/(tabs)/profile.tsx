@@ -12,6 +12,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Collapsible } from '@/components/ui/collapsible';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
@@ -29,20 +30,40 @@ export default function ProfileScreen() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
+      
+      if (!user?.id) {
+        console.log('No user ID available for profile fetch');
+        Alert.alert('Error', 'User session not found. Please log in again.');
+        return;
+      }
+      
+      console.log('Fetching profile for user ID:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
-        Alert.alert('Error', 'Failed to load profile data');
+        console.log('Profile fetch error details:', error);
+        
+        if (error.code === 'PGRST116') {
+          // No profile found - redirect to create profile
+          console.log('No profile found for user, redirecting to create profile');
+          router.push('/auth/createAccount');
+        } else {
+          logger.error('Error fetching profile', error);
+          Alert.alert('Error', 'Failed to load profile data. Please try refreshing.');
+        }
       } else {
+        console.log('Profile loaded successfully:', data);
         setProfile(data);
       }
     } catch (error) {
-      console.error('Unexpected error fetching profile:', error);
+      logger.error('Unexpected error fetching profile', error);
+      console.log('Unexpected profile fetch error:', error);
+      Alert.alert('Error', 'An unexpected error occurred while loading your profile.');
     } finally {
       setLoading(false);
     }
@@ -88,11 +109,11 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               console.log('Profile: Starting sign out process...');
-              // Let AuthContext handle all navigation logic
               await signOut();
               console.log('Profile: Sign out completed');
             } catch (error) {
-              console.error('Profile: Error during sign out process:', error);
+              logger.error('Profile: Error during sign out process', error);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
             }
           }
         }
@@ -133,12 +154,9 @@ export default function ProfileScreen() {
                   {profile?.pronouns || 'Active'}
                 </ThemedText>
               </View>
-              <Pressable style={styles.editIconContainer}>
-                <IconSymbol name="pencil" size={24} color={Colors[theme].text} />
-              </Pressable>
             </View>
             <Image
-              source={profile?.profile_picture || require('@/assets/images/FurryPeter.jpg')}
+              source={profile?.profile_picture ? { uri: profile.profile_picture } : require('@/assets/images/purr4furr-high-resolution-logo.png')}
               style={styles.profileImage}
               contentFit="cover"
             />
@@ -199,7 +217,17 @@ export default function ProfileScreen() {
                   'This will take you to the profile survey to update your information.',
                   [
                     { text: 'Cancel', style: 'cancel' },
-                    { text: 'Update', onPress: () => router.push('/auth/survey' as any) }
+                    { 
+                      text: 'Update', 
+                      onPress: () => {
+                        try {
+                          router.push('/auth/survey');
+                        } catch (error) {
+                          logger.error('Navigation error to survey', error);
+                          Alert.alert('Error', 'Unable to open profile editor. Please try again.');
+                        }
+                      }
+                    }
                   ]
                 );
               }}

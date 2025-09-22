@@ -224,7 +224,6 @@ export default function SurveyScreen() {
         .upsert(profileData);
 
       if (error) {
-        console.error('Supabase save error:', error);
         Alert.alert('Error', 'Failed to save profile. Please try again.');
         return;
       }
@@ -234,7 +233,6 @@ export default function SurveyScreen() {
         { text: 'OK', onPress: () => router.replace('/(tabs)') }
       ]);
     } catch (error) {
-      console.error('Unexpected error:', error);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     }
   };
@@ -637,7 +635,25 @@ export default function SurveyScreen() {
       >
         {/* Progress Header */}
         <View style={[styles.header, { borderBottomColor: Colors[theme].icon + '20' }]}>
-          <ThemedText style={styles.headerTitle}>Complete Your Profile</ThemedText>
+          <View style={styles.headerTop}>
+            <Pressable 
+              style={styles.closeButton}
+              onPress={() => {
+                Alert.alert(
+                  'Cancel Profile Update',
+                  'Are you sure you want to cancel? Your changes will not be saved.',
+                  [
+                    { text: 'Continue Editing', style: 'cancel' },
+                    { text: 'Cancel', style: 'destructive', onPress: () => router.back() }
+                  ]
+                );
+              }}
+            >
+              <IconSymbol name="xmark" size={24} color={Colors[theme].icon} />
+            </Pressable>
+            <ThemedText style={styles.headerTitle}>Complete Your Profile</ThemedText>
+            <View style={{ width: 24 }} />
+          </View>
           <View style={styles.progressContainer}>
             <View style={[styles.progressBar, { backgroundColor: Colors[theme].icon + '20' }]}>
               <View 
@@ -705,6 +721,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  closeButton: {
+    padding: 4,
   },
   headerTitle: {
     fontSize: 24,

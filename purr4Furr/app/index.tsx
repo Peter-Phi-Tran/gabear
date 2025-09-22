@@ -14,14 +14,18 @@ export default function LandingScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log('Index useEffect - loading:', loading, 'session:', !!session, 'isSigningOut:', isSigningOut);
+    console.log('Landing: Auth state - loading:', loading, 'session:', !!session, 'isSigningOut:', isSigningOut);
     
     // Only redirect to tabs if we have a session and we're not in the middle of signing out
     if (!loading && session && !isSigningOut) {
-      console.log('User has session and not signing out, navigating to tabs');
+      console.log('Landing: User has session and not signing out, navigating to tabs');
       router.replace('/(tabs)');
     } else if (!loading && !session) {
-      console.log('No session, staying on landing page');
+      console.log('Landing: No session, staying on landing page');
+      // Ensure we're on the landing page (in case we were redirected here from logout)
+      if (router.canGoBack()) {
+        router.replace('/');
+      }
     }
   }, [session, loading, isSigningOut, router]);
 

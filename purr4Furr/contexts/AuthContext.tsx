@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { router } from 'expo-router';
+import { logger } from '@/lib/logger';
 
 interface AuthContextType {
   session: Session | null;
@@ -49,15 +50,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
+          setIsSigningOut(false);
           setLoading(false);
           
-          // Force navigation reset to root when signed out
+          // Navigate to landing page after sign out
           setTimeout(() => {
-            router.dismissAll();
-            router.replace('/' as any);
-            setIsSigningOut(false);
-          }, 100);
+            try {
+              // Use replace to prevent back navigation to tabs
+              router.replace('/');
+            } catch (error) {
+              console.log('Navigation error handled:', error);
+              // Fallback navigation method
+              router.push('/');
+            }
+          }, 200);
+        } else if (event === 'SIGNED_IN') {
         } else {
+          // Handle all other auth events (INITIAL_SESSION, TOKEN_REFRESHED, etc.)
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
@@ -73,14 +82,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsSigningOut(true);
       console.log('AuthContext: Starting sign out process...');
       
+      // Sign out from Supabase first
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Error signing out:', error);
-        setIsSigningOut(false);
+        logger.error('Error signing out from Supabase', error);
       }
-      // Note: The actual navigation is handled in the auth state change listener
+      
+      // Clear state after successful signout
+      setSession(null);
+      setUser(null);
+      
+      console.log('AuthContext: Sign out completed successfully');
+      
+      // Navigate to home page
+      router.replace('/');
+      
     } catch (error) {
-      console.error('Unexpected error during sign out:', error);
+      logger.error('Unexpected error during sign out', error);
+      
+      // Force clear state and navigate on error
+      setSession(null);
+      setUser(null);
+      router.replace('/');
+      
+    } finally {
       setIsSigningOut(false);
     }
   };
